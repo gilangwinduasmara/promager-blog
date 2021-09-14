@@ -1,10 +1,11 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import Header from '../components/header'
+import Header from '../../components/header'
 import Image from 'next/image'
-import PostCard from '../components/post-card'
-import styles from '../styles/Home.module.css'
+import PostCard from '../../components/post-card'
+import styles from '../../styles/Home.module.css'
 import axios from 'axios'
+import { serialize } from 'next-mdx-remote/serialize'
 
 const Home: NextPage = ({articles}) => {
   return (
@@ -20,7 +21,7 @@ const Home: NextPage = ({articles}) => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {
               articles.map((article:any) => (
-                <PostCard key={article.id} title={article.title} description={article.description} slug={article.slug}/>
+                <PostCard key={article.id} title={article.title} description={article.description} slug={article.slug} />
               ))
             }
           </div>
@@ -48,12 +49,19 @@ const Home: NextPage = ({articles}) => {
     </div>
   )
 }
+export async function getStaticPaths() {
+  const categories = await axios.get(`http://localhost:1337/categories`);
+  const paths = categories.data.map((categories:any) => ({
+    params: { slug: categories.slug },
+  }))
+  return { paths, fallback: false }
+}
 
-export const getStaticProps = async () => {
-  const res = await axios.get('http://localhost:1337/articles');
+export const getStaticProps = async ({params}) => {
+  const res = await axios.get(`http://localhost:1337/categories?slug=${params.slug}`);
   return {
     props: {
-      articles: res.data,
+      articles: res.data[0].articles,
     },
   }
 }
